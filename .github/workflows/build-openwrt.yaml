@@ -5,9 +5,9 @@ on:
       package:
         description: "archive packages or not"
         required: false
-        default: "no"
-      image:
-        description: "build images or not"
+        default: "yes"
+      firmware:
+        description: "build firmware or not"
         required: false
         default: "yes"
       release:
@@ -83,14 +83,6 @@ jobs:
         du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
         du -h --max-depth=1 ./build_dir
         du -h --max-depth=1 ./bin
-    - name: Package Armvirt as OpenWrt
-      if: github.event.inputs.image == 'yes'
-      uses: jianshaow/openwrt_packit@master
-      env:
-        OPENWRT_ARMVIRT: lede/bin/targets/*/*/*.tar.gz
-        PACKAGE_SOC: s905d
-        KERNEL_VERSION_NAME: 5.15.77
-        WHOAMI: cooljj
     - name: Prepare build info artifact
       working-directory: ${{ env.OP_REPO_PATH }}
       run: |
@@ -105,17 +97,11 @@ jobs:
         mkdir -p $ARTIFACT_PATH/package
         cp -rf $(find bin/packages/ -type f -name "*.ipk") $ARTIFACT_PATH/package/
     - name: Prepare firmwares artifact
-      if: github.event.inputs.image != 'yes'
+      if: github.event.inputs.firmware != 'yes'
       working-directory: ${{ env.OP_REPO_PATH }}
       run: |
         mkdir -p $ARTIFACT_PATH/firmware
         cp -rf $(find ./bin/targets/ -type f -name "*.tar.gz") $ARTIFACT_PATH/firmware/
-    - name: Prepare images artifact
-      if: github.event.inputs.image == 'yes'
-      working-directory: ${{ env.OP_REPO_PATH }}
-      run: |
-        mkdir -p $ARTIFACT_PATH/images
-        cp -rf $PACKAGED_OUTPUTPATH/*.img.gz $ARTIFACT_PATH/images/
     - name: Upload artifact directory
       uses: actions/upload-artifact@v3
       with:
